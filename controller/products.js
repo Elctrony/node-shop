@@ -1,4 +1,4 @@
-const products = [];
+const Product = require('../model/products');
 
 exports.getAddProduct = (req, res, next) => {
     res.render('add-product', { pageTitle: 'Add Product', path: '/admin/add-product' });
@@ -6,15 +6,16 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
     const titleData = req.body.title;
-    products.push({ title: titleData });
+    const product = new Product(titleData);
+    product.save();
     res.redirect('/');
 }
 
 exports.getAllProduct = (req, res, next) => {
-    for (let product of products) {
-        console.log(product)
-    }
-    res.render('shop', { pageTitle: 'Shop', prods: products, path: '/' })
+    Product.fetchAllProducts((products)=>{
+        res.render('shop', { pageTitle: 'Shop', prods: products, path: '/' })
+    })
+   
 }
 
 exports.pageNotFound = (req,res,next)=>{
