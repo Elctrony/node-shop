@@ -1,1 +1,9 @@
-[{"title":"Book"},{"title":"Mac"},{"title":"Tablet"}]
+[
+    {
+        "id": "1234",
+        "title": "Iphone",
+        "imageUrl": "https://mobizil.com/wp-content/uploads/2021/09/IPhone-13.jpg",
+        "price": 30,
+        "description": "A new mobile from Apple"
+    }
+]

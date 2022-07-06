@@ -1,29 +1,81 @@
-const path = require('path');
-const fs = require('fs');
+const mongo = require('mongodb');
 
-const p = path.join(path.dirname(process.mainModule.filename), 'data', 'products.json');
+const getDb = require('../util/database').getDb;
+
+
+
+const Cart = require('./cart');
+
+
+
 
 module.exports = class Product {
-    constructor(title, imageUrl, description, price) {
+    constructor(title, imageUrl, description, price, id,userId) {
         this.title = title;
         this.imageUrl = imageUrl;
         this.description = description;
         this.price = price;
-      }
-
-    save() {
-        fetchAllProducts(products=>{
-            products.push(this);
-            console.log(products);
-            fs.writeFile(p,JSON.stringify(products),(err)=>{})
-        })
-      
+        this._id = id;
+        this.userID = userId;
     }
 
-    static fetchAllProducts(cb){
-        fs.readFile(p,(err,content)=>{
-            const allProduct = JSON.parse(content);
-            cb(allProduct);
-        })
+    save() {
+        const db = getDb();
+        if (this._id) {
+            console.log('UPDATE PRODUCT', this._id);
+            console.log(this.price);
+            console.log(mongo.ObjectId(this._id));
+            return db.collection('products').updateOne({ _id: mongo.ObjectId(this._id) }, {
+                $set: {
+                    title: this.title, 
+                    imageUrl: this.imageUrl,
+                    description: this.description,
+                    price: this.price,
+                }
+            })
+                .then(res => {
+                    console.log('sucess', res);
+                    return res;
+                }).catch(err => console.log('err', err));;
+        } else {
+            console.log('SAVE PRODUCT');
+
+            return db.collection('products').insertOne(this)
+                .then(res => { return res })
+                .catch(err => console.log(err));
+
+        }
+
+    }
+
+    static deleteById(id) {
+        const db = getDb();
+        console.log('db delete');
+        return db.collection('products').deleteOne({ _id: mongo.ObjectId(id) }).then(res => console.log(res)).catch(err => console.log(err));
+    }
+
+    static fetchAllProducts() {
+        const db = getDb();
+        return db
+            .collection('products')
+            .find().toArray()
+            .then(products => {
+                console.log(products);
+                return products;
+            })
+            .catch(err => console.log(err));
+    }
+
+    static fetctProductbyId(id) {
+        const db = getDb();
+        console.log('porduct:',id);
+        return db
+            .collection('products')
+            .find({ _id: mongo.ObjectId(id) }).toArray()
+            .then(products => {
+                console.log(products);
+                return products[0];
+            })
+            .catch(err => console.log(err));
     }
 }
