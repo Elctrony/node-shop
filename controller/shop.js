@@ -3,7 +3,7 @@ const Cart = require('../models/cart');
 const User = require('../models/user');
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAllProducts().then(products => {
+  Product.find().then(products => {
     res.render('shop/product-list', {
       prods: products,
       pageTitle: 'All Products',
@@ -15,7 +15,7 @@ exports.getProducts = (req, res, next) => {
 exports.getProductsbyID = (req, res, next) => {
   const id = req.params.productId;
   console.log('detail', id);
-  Product.fetctProductbyId(id).then(product => {
+  Product.findById(id).then(product => {
     res.render('shop/product-detail', {
       product: product,
       path: '/products',
@@ -25,7 +25,7 @@ exports.getProductsbyID = (req, res, next) => {
 }
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAllProducts().then(products => {
+  Product.find().then(products => {
     res.render('shop/product-list', {
       prods: products,
       pageTitle: 'All Products',
