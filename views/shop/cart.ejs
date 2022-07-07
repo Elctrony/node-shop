@@ -10,10 +10,22 @@
                     <% products.forEach(p => { %>
                         <li class="cart__item">
                             <h1><%= p.title %></h1>
+                            <h2>Price: <%= p.price %></h2>
+
                             <h2>Quantity: <%= p.quantity %></h2>
+                            <form action="/cart-change-item" method="POST">
+                                <input type="hidden" value="<%= p._id %>" name="productId">
+                                <input type="hidden" value=false name="increment">
+                                <button class="btn danger" type="submit">-</button>
+                            </form>
                             <form action="/cart-delete-item" method="POST">
                                 <input type="hidden" value="<%= p._id %>" name="productId">
                                 <button class="btn danger" type="submit">Delete</button>
+                            </form>
+                            <form action="/cart-change-item" method="POST">
+                                <input type="hidden" value="<%= p._id %>" name="productId">
+                                <input type="hidden" value=true name="increment">
+                                <button class="btn danger" type="submit">+</button>
                             </form>
                         </li>
                     <% }) %>

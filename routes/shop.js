@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const shopController = require('../controller/shop');
+const { route } = require('./admin');
 
 router.get('/', shopController.getIndex);
 
@@ -14,7 +15,10 @@ router.get('/cart', shopController.getCart);
 
 router.post('/cart',shopController.postCart);
 
-router.post('/delete-cart-item',shopController.postDeleteCartItem);
+router.post('/cart-delete-item',shopController.postDeleteCartItem);
+router.post('/cart-change-item',shopController.postChangeCartItem);
+
+router.post('/create-order',shopController.postCreateOrder);
 
 
 router.get('/orders', shopController.getOrders);
