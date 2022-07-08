@@ -17,7 +17,8 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const description = req.body.description;
   const title = req.body.title;
-  const product = new Product({ title: title, imageUrl: imageUrl, description: description, price: price });
+  const user = req.user;
+  const product = new Product({ title: title, imageUrl: imageUrl, description: description, price: price ,userId:user});
   product.save().then(result=>{
     res.redirect('/');
   });
@@ -76,7 +77,7 @@ exports.postDeleteProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
   console.log('loading....')
-  Product.find().then(products => {
+  Product.find().populate('userId').then(products => {
     console.log('admdddd', products);
     res.render('admin/products', {
       prods: products,

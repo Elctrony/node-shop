@@ -1,6 +1,7 @@
 const Product = require('../models/products');
 const Cart = require('../models/cart');
 const User = require('../models/user');
+const orders = require('../models/orders');
 
 exports.getProducts = (req, res, next) => {
   Product.find().then(products => {
@@ -36,13 +37,13 @@ exports.getIndex = (req, res, next) => {
 
 exports.getCart = (req, res, next) => {
 
-  req.user.getCart().then(cartProducts => {
-    console.log('count', cartProducts);
+  req.user.populate('cart.items.productId').then(user => {
+    console.log('count', user.cart.items);
 
     res.render('shop/cart', {
       path: '/cart',
       pageTitle: 'Your Cart',
-      products: cartProducts
+      products: user.cart.items
     });
   })
 
@@ -53,14 +54,14 @@ exports.postCart = (req, res, next) => {
   const id = req.body.productId;
 
   console.log('cart', id);
-  Product.fetctProductbyId(id).then(product => {
+  Product.findById(id).then(product => {
     const user = req.user;
-    console.log(user._id);
+    console.log(user);
     console.log('item to Cart:', product);
     return user.addToCart(product);
   }).then(result => {
-    console.log(result);
-    res.redirect('/cart');
+    console.log('cart result',result);
+    res.redirect('/');
 
   })
 }
@@ -82,6 +83,7 @@ exports.postDeleteCartItem = (req, res, next) => {
 
 exports.postChangeCartItem = (req, res, next) => {
   const id = req.body.productId;
+  console.log('operation',id);
   const increament = req.body.increment;
   if (increament == 'true') {
     console.log('increament')
@@ -102,12 +104,14 @@ exports.postChangeCartItem = (req, res, next) => {
 
 
 exports.getOrders = (req, res, next) => {
-  req.user.getOrders().then(orders => {
-    res.render('shop/orders', {
-      path: '/orders',
-      pageTitle: 'Your Orders',
-      orders: orders,
-    });
+orders.find({userId:req.user._id}).populate('items.productId').populate('userId').then(orders => {
+      console.log('datass',orders);
+      res.render('shop/orders', {
+        path: '/orders',
+        pageTitle: 'Your Orders',
+        orders: orders,
+      });
+    
   });
 
 };

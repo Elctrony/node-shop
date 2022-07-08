@@ -26,22 +26,25 @@ app.set('views', 'views');
 app.use('/mcu', (req, res, next) => {
     console.log(req);
     res.statusCode = 202;
-
     res.send('HELLLO');
     next();
 })
 app.use((req, res, next) => {
-
-    User.findById('62c70672cbf80114b2743485')
-    .then((user) => {
-        console.log('user ID:', user._id);
-        console.log('user Name:', user.name);
-        console.log('user email:', user.email);
-        req.user = user;
-        next();
-    }).catch(err => {
-        console.log(err);
-    })
+    User.findOne()
+        .then((user) => {
+            if(!user){
+                console.log('No user Avaliable')
+                next();
+                return;
+            }
+            console.log('user ID:', user._id);
+            console.log('user Name:', user.name);
+            console.log('user email:', user.email);
+            req.user = user;
+            next();
+        }).catch(err => {
+            console.log(err);
+        })
 })
 
 
@@ -53,6 +56,17 @@ app.use('/', error.get404)
 
 mongoose.connect('mongodb+srv://Abuelnaga:bLYqerigtc1sW5OZ@cluster0.pcqfa.mongodb.net/shop?retryWrites=true&w=majority').then(client => {
     console.log('Database succssed')
+    User.findOne().then(user => {
+        if (!user) {
+            console.log('createUser');
+            const user = new User({ 
+            name: 'Ahmed', 
+            email: 'Ahmed@gmail.com',
+            cart: { items: [], totalPrice:0} 
+        });
+            user.save();
+        }
+    })
     app.listen(3000);
 })
 

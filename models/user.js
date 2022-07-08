@@ -2,16 +2,113 @@ const mongo = require('mongodb');
 const Product = require('./products');
 const getdb = require('../util/database').getDb;
 
+const Products = require('./products');
+const Orders = require('./orders');
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
-    name:{ type: String, required: true },
+    name: { type: String, required: true },
     email: { type: String, required: true },
-    cart:{type:Object,required:false},
+    cart: {
+        type: {
+            items: [
+                {
+                    productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+                    quantity: { type: Number, required: true }
+                }
+            ],
+            totalPrice: { type: Number, deafult: 0 }
+        }, required: true
+    },
 })
 
-module.exports = mongoose.model('User',UserSchema,'users');
+
+UserSchema.methods.addToCart = function (product) {
+    let updatedCart = {};
+    if (this.cart) {
+        const items = this.cart.items;
+        console.log('item', product);
+        const productIndex = items.findIndex(p => p.productId.toString() === product._id.toString());
+        console.log('index:', productIndex);
+
+        const existingProduct = items[productIndex];
+        if (productIndex >= 0) {
+            items[productIndex].quantity = existingProduct.quantity + 1;
+            updatedCart = {
+                items: [...items],
+                totalPrice: +this.cart.totalPrice + +product.price
+            }
+        } else {
+            updatedCart = {
+                items: [...this.cart.items, { productId: mongo.ObjectId(product._id), quantity: 1 }],
+                totalPrice: +this.cart.totalPrice + +product.price
+            }
+        }
+    } else {
+        updatedCart = { items: [{ productId: mongo.ObjectId(product._id), quantity: 1 }], totalPrice: +product.price };
+    }
+    this.cart = updatedCart;
+    return this.save();
+}
+
+
+
+UserSchema.methods.decreamentCartItem = function (id) {
+    console.log('decreament', id);
+    return Products.findById(id).then(product => {
+        let existingProductIndex = this.cart.items.findIndex(p => p.productId.toString() === id.toString())
+        let existingProduct = this.cart.items[existingProductIndex];
+        this.cart.totalPrice = +this.cart.totalPrice - +product.price;
+        if (existingProduct.quantity > 1) {
+            this.cart.items[existingProductIndex].quantity = this.cart.items[existingProductIndex].quantity - 1
+        } else {
+            this.cart.items = this.cart.items.filter(p => p.productId.toString() !== id.toString());
+        }
+        console.log(this.cart);
+        return this.save();
+    })
+}
+
+UserSchema.methods.increamentCartItem = function (id) {
+    console.log('increament', id);
+    return Products.findById(id).then(product => {
+        let existingProductIndex = this.cart.items.findIndex(p => p.productId.toString() === id.toString())
+        this.cart.totalPrice = +this.cart.totalPrice + +product.price;
+        this.cart.items[existingProductIndex].quantity = this.cart.items[existingProductIndex].quantity + 1
+
+        console.log(this.cart);
+        return this.save();
+
+    })
+
+}
+
+UserSchema.methods.deleteCartItem = function (id) {
+    return Product.findById(id).then(product => {
+        let existingProduct = this.cart.items.find(p => p.productId.toString() === id.toString())
+        this.cart.totalPrice = +this.cart.totalPrice - +product.price * existingProduct.quantity;
+        this.cart.items = this.cart.items.filter(p => p.productId.toString() !== id.toString());
+        console.log(this.cart);
+        return this.save();
+    })
+}
+
+UserSchema.methods.addOrder = function () {
+    const order = new Orders({ items: this.cart.items, totalPrice: this.cart.totalPrice, userId: this._id })
+    return order.save().then(result => {
+        this.cart.items = [];
+        this.cart.totalPrice = 0;
+        return this.save();
+    });
+
+
+}
+
+
+
+module.exports = mongoose.model('User', UserSchema, 'users');
 
 //class User {
 //    constructor(username, email, cart, id) {
@@ -93,41 +190,7 @@ module.exports = mongoose.model('User',UserSchema,'users');
 //        })
 //    }
 //
-//    decreamentCartItem(id) {
-//        const db = getdb();
-//        return Product.fetctProductbyId(id).then(product => {
-//            let existingProductIndex = this.cart.items.findIndex(p => p.productId.toString() === id.toString())
-//            let existingProduct = this.cart.items[existingProductIndex];
-//            this.cart.totalPrice = +this.cart.totalPrice - +product.price;
-//            if (existingProduct.quantity > 1) {
-//                this.cart.items[existingProductIndex].quantity = this.cart.items[existingProductIndex].quantity - 1
-//            } else {
-//                this.cart.items = this.cart.items.filter(p => p.productId.toString() !== id.toString());
-//            }
-//            console.log(this.cart);
-//            return db.collection('users').updateOne({ _id: mongo.ObjectId(this.id) }, {
-//                $set: {
-//                    cart: this.cart
-//                }
-//            })
-//        })
-//    }
-//    increamentCartItem(id) {
-//        const db = getdb();
-//        return Product.fetctProductbyId(id).then(product => {
-//            let existingProductIndex = this.cart.items.findIndex(p => p.productId.toString() === id.toString())
-//            let existingProduct = this.cart.items[existingProductIndex];
-//            this.cart.totalPrice = +this.cart.totalPrice + +product.price;
-//            this.cart.items[existingProductIndex].quantity = this.cart.items[existingProductIndex].quantity + 1
 //
-//            console.log(this.cart);
-//            return db.collection('users').updateOne({ _id: mongo.ObjectId(this.id) }, {
-//                $set: {
-//                    cart: this.cart
-//                }
-//            })
-//        })
-//    }
 //    addOrder() {
 //        const db = getdb();
 //        return this.getCart().then(products => {
@@ -180,4 +243,4 @@ module.exports = mongoose.model('User',UserSchema,'users');
 //    }
 //}
 //
-//module.exports = User;
+//module.exports = User
