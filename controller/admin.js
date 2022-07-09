@@ -1,6 +1,8 @@
 const Product = require('../models/products');
 
 exports.getAddProduct = (req, res, next) => {
+   var isAuth = req.session.isAuthenticated;
+    console.log('session',isAuth);
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
@@ -8,6 +10,7 @@ exports.getAddProduct = (req, res, next) => {
     productCSS: true,
     activeAddProduct: true,
     editing:false,
+    isAuthenticated: isAuth, 
   });
 };
 
@@ -17,7 +20,7 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const description = req.body.description;
   const title = req.body.title;
-  const user = req.user;
+  const user = req.session.user;
   const product = new Product({ title: title, imageUrl: imageUrl, description: description, price: price ,userId:user});
   product.save().then(result=>{
     res.redirect('/');
@@ -35,13 +38,16 @@ exports.getEditProduct = (req, res, next) => {
   }
   Product.findById(id).then(product => {
     console.log('DATA', product);
-
+    var isAuth = req.session.isAuthenticated;
+    console.log('session',isAuth);
     res.render('admin/edit-product', {
       pageTitle: 'Edit Product',
       path: '/admin/edit-product',
       product: product,
       description: product.description,
-      editing: true
+      editing: true,
+      isAuthenticated: isAuth, 
+
     });
   });
 };
@@ -79,10 +85,14 @@ exports.getProducts = (req, res, next) => {
   console.log('loading....')
   Product.find().populate('userId').then(products => {
     console.log('admdddd', products);
+    var isAuth = req.session.isAuthenticated;
+    console.log('session',isAuth);
     res.render('admin/products', {
       prods: products,
       pageTitle: 'Admin Products',
-      path: '/admin/products'
+      path: '/admin/products',
+      isAuthenticated: isAuth, 
+
     });
   });
 };
