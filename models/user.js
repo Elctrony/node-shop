@@ -11,6 +11,7 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
+    password: { type: String, required: true },
     cart: {
         type: {
             items: [
@@ -38,12 +39,12 @@ UserSchema.methods.addToCart = function (product) {
             items[productIndex].quantity = existingProduct.quantity + 1;
             updatedCart = {
                 items: [...items],
-                totalPrice: +this.cart.totalPrice + +product.price
+                totalPrice: +this.cart.totalPrice?? 0 + +product.price
             }
         } else {
             updatedCart = {
                 items: [...this.cart.items, { productId: mongo.ObjectId(product._id), quantity: 1 }],
-                totalPrice: +this.cart.totalPrice + +product.price
+                totalPrice: +this.cart.totalPrice?? 0 + +product.price
             }
         }
     } else {

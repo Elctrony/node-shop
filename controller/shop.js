@@ -5,13 +5,10 @@ const orders = require('../models/orders');
 
 exports.getProducts = (req, res, next) => {
   Product.find().then(products => {
-    var isAuth = req.session.isAuthenticated;
-    console.log('session',isAuth);
     res.render('shop/product-list', {
       prods: products,
       pageTitle: 'All Products',
       path: '/products',
-      isAuthenticated: isAuth, 
 
     });
   }).catch(err => console.log(err));
@@ -21,13 +18,11 @@ exports.getProductsbyID = (req, res, next) => {
   const id = req.params.productId;
   console.log('detail', id);
   Product.findById(id).then(product => {
-    var isAuth = req.session.isAuthenticated;
-    console.log('session',isAuth);
+    
     res.render('shop/product-detail', {
       product: product,
       path: '/products',
       pageTitle: product.title,
-      isAuthenticated: isAuth, 
 
     })
   })
@@ -35,13 +30,11 @@ exports.getProductsbyID = (req, res, next) => {
 
 exports.getIndex = (req, res, next) => {
   Product.find().then(products => {
-    var isAuth = req.session.isAuthenticated;
-    console.log('session',isAuth);
+  
     res.render('shop/product-list', {
       prods: products,
       pageTitle: 'All Products',
       path: '/',
-      isAuthenticated: isAuth, 
 
     });
   }).catch(err => console.log(err));
@@ -51,13 +44,11 @@ exports.getCart = (req, res, next) => {
 
   req.user.populate('cart.items.productId').then(user => {
     console.log('count', user.cart.items);
-    var isAuth = req.session.isAuthenticated;
-    console.log('session',isAuth);
+ 
     res.render('shop/cart', {
       path: '/cart',
       pageTitle: 'Your Cart',
       products: user.cart.items,
-      isAuthenticated: isAuth, 
 
     });
   })
@@ -73,7 +64,7 @@ exports.postCart = (req, res, next) => {
     const user = req.user;
     console.log(user);
     console.log('item to Cart:', product);
-    return user.session.addToCart(product);
+    return user.addToCart(product);
   }).then(result => {
     console.log('cart result',result);
     res.redirect('/');
@@ -121,13 +112,11 @@ exports.postChangeCartItem = (req, res, next) => {
 exports.getOrders = (req, res, next) => {
 orders.find({userId:req.user._id}).populate('items.productId').populate('userId').then(orders => {
       console.log('datass',orders);
-      var isAuth = req.session.isAuthenticated;
-      console.log('session',isAuth);
+ 
       res.render('shop/orders', {
         path: '/orders',
         pageTitle: 'Your Orders',
         orders: orders,
-        isAuthenticated: isAuth, 
 
       });
     
@@ -136,12 +125,10 @@ orders.find({userId:req.user._id}).populate('items.productId').populate('userId'
 };
 
 exports.getCheckout = (req, res, next) => {
-  var isAuth = req.session.isAuthenticated;
-  console.log('session',isAuth);
+  
   res.render('shop/checkout', {
     path: '/checkout',
     pageTitle: 'Checkout',
-    isAuthenticated: isAuth, 
 
   });
 };
