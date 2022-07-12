@@ -52,7 +52,11 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
   const updatedDescription = req.body.description;
   const updatedTitle = req.body.title;
-  Product.findById(id).then(product=>{
+  Product.findOne({_id:id,userId:req.user._id}).then(product=>{
+    if(!product){
+      console.log('not authorized ID');
+      return res.redirect('/')
+    }
     product.title=updatedTitle;
     product.imageUrl = updatedImageUrl;
     product.price = updatedPrice;
@@ -68,8 +72,7 @@ exports.postEditProduct = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
   const id = req.body.productId;
   console.log('idd', id);
-  Product.findByIdAndRemove(id).then(result=>{
-
+  Product.deleteOne({_id:id,userId:req.user._id}).then(result=>{
     res.redirect('/');
   });
 
@@ -77,7 +80,7 @@ exports.postDeleteProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
   console.log('loading....')
-  Product.find().populate('userId').then(products => {
+  Product.find({userId: req.user._id}).populate('userId').then(products => {
     console.log('admdddd', products);
     res.render('admin/products', {
       prods: products,
