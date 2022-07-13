@@ -41,12 +41,12 @@ UserSchema.methods.addToCart = function (product) {
             items[productIndex].quantity = existingProduct.quantity + 1;
             updatedCart = {
                 items: [...items],
-                totalPrice: +this.cart.totalPrice?? 0 + +product.price
+                totalPrice: (+this.cart.totalPrice?? 0)  + +product.price
             }
         } else {
             updatedCart = {
                 items: [...this.cart.items, { productId: mongo.ObjectId(product._id), quantity: 1 }],
-                totalPrice: +this.cart.totalPrice?? 0 + +product.price
+                totalPrice: (+this.cart.totalPrice?? 0) + +product.price 
             }
         }
     } else {
@@ -68,6 +68,9 @@ UserSchema.methods.decreamentCartItem = function (id) {
             this.cart.items[existingProductIndex].quantity = this.cart.items[existingProductIndex].quantity - 1
         } else {
             this.cart.items = this.cart.items.filter(p => p.productId.toString() !== id.toString());
+        }
+        if(this.cart.totalPrice<0){
+            this.cart.totalPrice = 0;
         }
         console.log(this.cart);
         return this.save();
@@ -92,6 +95,9 @@ UserSchema.methods.deleteCartItem = function (id) {
     return Product.findById(id).then(product => {
         let existingProduct = this.cart.items.find(p => p.productId.toString() === id.toString())
         this.cart.totalPrice = +this.cart.totalPrice - +product.price * existingProduct.quantity;
+        if(this.cart.totalPrice<0){
+            this.cart.totalPrice = 0;
+        }
         this.cart.items = this.cart.items.filter(p => p.productId.toString() !== id.toString());
         console.log(this.cart);
         return this.save();

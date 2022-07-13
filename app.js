@@ -70,9 +70,12 @@ app.use((req, res, next) => {
         next();
     }else{
     User.findById(req.session.user._id).then(user => {
-        req.user = user;
+        if(user)
+            req.user = user;
         next();
-    }).catch(err => console.log(err));
+    }).catch(err =>{
+        throw new Error(err);
+    });
     }
 })
 
@@ -80,8 +83,13 @@ app.use((req, res, next) => {
 app.use(shop);
 app.use(auth);
 app.use('/admin', admin);
+app.use('/500',error.get500)
 app.use('/', error.get404)
 
+
+app.use((error,req,res,next)=>{
+    res.status(500).render('500', { pageTitle: 'Error', path: '/500' ,    
+});})
 
 
 mongoose.connect(MONGODBURI).then(client => {
@@ -99,4 +107,3 @@ mongoose.connect(MONGODBURI).then(client => {
     })
     app.listen(3000);
 })
-
