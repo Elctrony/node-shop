@@ -4,6 +4,8 @@ const session = require('express-session')
 const bodyParser = require('body-parser');
 const path = require('path')
 
+const multer = require('multer');
+
 const mongoose = require('mongoose');
 
 const MongoDBstore = require('connect-mongodb-session')(session);
@@ -30,11 +32,35 @@ const store = new MongoDBstore({
     collection: 'sessions'
 })
 
+const storage = multer.diskStorage({
+    filename:(req,file,cb)=>{
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        console.log(uniqueSuffix);
+        cb(null, uniqueSuffix +'-'+ file.originalname);
+    },
+    destination:(req,file,cb)=>{
+        cb(null,'images')
+    }
+})
+
+const filter = (req,file,cb)=>{
+    if(file.mimetype==="image/png"||file.mimetype==="image/jpg"||file.mimetype==="image/jpeg"){
+        cb(null,true);
+    }else{
+        console.log('NOOOOOO');
+        cb(null,false);
+    }
+}
+
+
 const User = require('./models/user');
 const { mongoConnect } = require('./util/database');
 app.use(express.static(path.join(__dirname, 'public')))
+app.use('/images',express.static(path.join(__dirname, 'images')))
 
+app.use(multer({storage:storage,fileFilter: filter}).single('image'));
 app.use(bodyParser.urlencoded({ extended: false }))
+
 app.use(session({
     secret: 'keyboard cat',
     resave: false,
@@ -48,11 +74,12 @@ app.use(flash());
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
-app.use((req,res,next)=>{
-    res.locals.isAuthenticated =  req.session.isAuthenticated;
+app.use((req, res, next) => {
+    res.locals.isAuthenticated = req.session.isAuthenticated;
     res.locals.csrfToken = req.csrfToken();
     next();
 })
+
 
 
 app.use('/mcu', (req, res, next) => {
@@ -68,14 +95,14 @@ app.use((req, res, next) => {
     if (!req.session.user) {
         console.log('no user in session');
         next();
-    }else{
-    User.findById(req.session.user._id).then(user => {
-        if(user)
-            req.user = user;
-        next();
-    }).catch(err =>{
-        throw new Error(err);
-    });
+    } else {
+        User.findById(req.session.user._id).then(user => {
+            if (user)
+                req.user = user;
+            next();
+        }).catch(err => {
+            throw new Error(err);
+        });
     }
 })
 
@@ -83,13 +110,13 @@ app.use((req, res, next) => {
 app.use(shop);
 app.use(auth);
 app.use('/admin', admin);
-app.use('/500',error.get500)
+app.use('/500', error.get500)
 app.use('/', error.get404)
 
 
 app.use((error,req,res,next)=>{
-    res.status(500).render('500', { pageTitle: 'Error', path: '/500' ,    
-});})
+    res.status(500).render('500', { pageTitle: 'Error', path: '/500'});
+})
 
 
 mongoose.connect(MONGODBURI).then(client => {

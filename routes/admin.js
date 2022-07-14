@@ -19,7 +19,6 @@ router.get('/products', isAuth, adminController.getProducts);
 // /admin/add-product => POST
 router.post('/add-product', isAuth, [
     check('title').isString().isLength({ min: 3 }).withMessage('Title can\'t be Empty'),
-    check('imageUrl').isURL().withMessage('Image must be a URL').trim(),
     check('price').isFloat().withMessage('Price can\'t be Empty'),
     check('description').isLength({ min: 6, max: 400 }).withMessage('Description can\'t be less than 6 charcter')
 ], adminController.postAddProduct);
@@ -29,7 +28,6 @@ router.get('/edit-product/:productId', isAuth, adminController.getEditProduct);
 
 router.post('/edit-product/', isAuth,[
     check('title').isString().isLength({ min: 3 }).withMessage('Title can\'t be Empty'),
-    check('imageUrl').isURL().withMessage('Image must be a URL').trim(),
     check('price').isFloat().withMessage('Price can\'t be Empty'),
     check('description').isLength({ min: 6, max: 400 }).withMessage('Description can\'t be less than 6 charcter')
 ], adminController.postEditProduct);

@@ -3,8 +3,18 @@ const Cart = require('../models/cart');
 const User = require('../models/user');
 const orders = require('../models/orders');
 
+const PDFdocument = require('pdfkit');
+
+const fs = require('fs');
+const path = require('path');
+
+const ITEM_PER_PAGE = 2;
+
+
 exports.getProducts = (req, res, next) => {
-  Product.find().then(products => {
+  const page = req.query.page?? 1 ;
+  console.log(page);
+  Product.find().skip((page - 1)*ITEM_PER_PAGE).limit(ITEM_PER_PAGE).find().then(products => {
     res.render('shop/product-list', {
       prods: products,
       pageTitle: 'All Products',
@@ -29,7 +39,10 @@ exports.getProductsbyID = (req, res, next) => {
 }
 
 exports.getIndex = (req, res, next) => {
-  Product.find().then(products => {
+  const page = req.query.page?? 1 ;
+  console.log(page);
+
+  Product.find().skip((page - 1)*ITEM_PER_PAGE).limit(ITEM_PER_PAGE).then(products => {
   
     res.render('shop/product-list', {
       prods: products,
@@ -120,6 +133,9 @@ orders.find({userId:req.user._id}).populate('items.productId').populate('userId'
 
       });
     
+  }).catch(err=>{
+    console.log('eroorrr for orders');
+    next(err);
   });
 
 };
@@ -132,3 +148,35 @@ exports.getCheckout = (req, res, next) => {
 
   });
 };
+
+exports.getInovice = (req,res,next)=>{
+  const orderId = req.params.orderId;
+  const invoiceName = 'invoice-'+orderId + '.pdf';
+  const invoicePath = path.join('data','invoice',invoiceName);
+  orders.findById(orderId).populate('items.productId').then(order=>{
+    if(!order){
+      console.log('order found');
+      next(new Error('no order found'));
+    }
+    if(order.userId.toString() !== req.user._id.toString()){
+      console.log('error found');
+      next(new Error('not authorized'));
+    }
+    res.setHeader('Content-Type','application/pdf');
+    res.setHeader('Content-Disposition','attachment; filename="'+invoiceName+'"');
+    console.log('download');
+    const pdfDoc = new PDFdocument();
+    pdfDoc.pipe(fs.createWriteStream(invoicePath));
+    pdfDoc.pipe(res);
+    pdfDoc.fontSize(26).text('Invoice!!!',{underline:true});
+    pdfDoc.text('--------------------------');
+    order.items.forEach(item=>{
+      pdfDoc.fontSize(18).text(item.productId.title + ' - ' + item.quantity + ' x ' + '$' + item.productId.price);
+    });
+    pdfDoc.text('--------------------------');
+    pdfDoc.fontSize(22).text('Total Price: $' + order.totalPrice);
+    pdfDoc.end();
+  }).catch(err=>{
+    console.log(err);
+    next(err)});
+}
