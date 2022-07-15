@@ -30,22 +30,20 @@
                                     <a href="/products/<%= product._id %>" class="btn">Details</a>
                                     <% if(isAuthenticated) {%>
 
-                                    <form action="/cart" method="post">
-                                        <button class="btn" type="submit">Add to Cart</button>
-                                        <input type="hidden" name="_csrf" value="<%=csrfToken %>">
-                                        <input type="hidden" name="productId" value="<%= product._id %>">
-                                    </form>
-                                    <%}%>
+                                        <form action="/cart" method="post">
+                                            <button class="btn" type="submit">Add to Cart</button>
+                                            <input type="hidden" name="_csrf" value="<%=csrfToken %>">
+                                            <input type="hidden" name="productId" value="<%= product._id %>">
+                                        </form>
+                                        <%}%>
                                 </div>
                             </article>
                             <% } %>
                     </div>
-                    <section class="pagination">
-                        <a href="/?page=1">1</a>
-                        <a href="/?page=2">2</a>
-                    </section>
-                    <% } else { %>
-                        <h1>No Products Found!</h1>
-                        <% } %>
+                    <%- include('../includes/pagination.ejs',{currentPage:currentPage,previousPage:previousPage,hasPreviousPage:hasPreviousPage,hasNextPage:hasNextPage,nextPage:nextPage,lastPage:lastPage})
+                        %>
+                        <% } else { %>
+                            <h1>No Products Found!</h1>
+                            <% } %>
             </main>
             <%- include('../includes/end.ejs') %>

@@ -5,6 +5,9 @@ const fileHelper = require('../util/file.js');
 
 const { validationResult } = require('express-validator');
 
+const ITEM_PER_PAGE = 1;
+
+
 exports.getAddProduct = (req, res, next) => {
   let message = req.flash('error');
   if (message.length > 0) {
@@ -44,7 +47,7 @@ exports.postAddProduct = (req, res, next) => {
       activeAddProduct: true,
       editing: false,
       hasError: true,
-      product: { title: title,  price: price, description: description },
+      product: { title: title, price: price, description: description },
       errorMessage: 'Attached file is not an image',
       validationErrors: errors.array()
     });
@@ -60,20 +63,20 @@ exports.postAddProduct = (req, res, next) => {
       activeAddProduct: true,
       editing: false,
       hasError: true,
-      product: { title: title,  price: price, description: description },
+      product: { title: title, price: price, description: description },
       errorMessage: errors.array()[0].msg,
       validationErrors: errors.array()
     });
   }
   const imageUrl = image.path;
-  const product = new Product({ title: title, imageUrl:imageUrl, description: description, price: price, userId: user });
+  const product = new Product({ title: title, imageUrl: imageUrl, description: description, price: price, userId: user });
   product.save().then(result => {
     res.redirect('/');
   }).catch(err => {
     console.log('errorrrrr')
     const error = new Error(err);
     error.httpStatusCode = 500;
-    next(error); 
+    next(error);
   });
 };
 
@@ -124,7 +127,7 @@ exports.postEditProduct = (req, res, next) => {
       activeAddProduct: true,
       editing: true,
       hasError: true,
-      product: { title: title,  price: price, description: description },
+      product: { title: title, price: price, description: description },
       errorMessage: 'Attached file is not an image',
       validationErrors: errors.array()
     });
@@ -148,7 +151,7 @@ exports.postEditProduct = (req, res, next) => {
       console.log('not authorized ID');
       return res.redirect('/')
     }
-    if(updateImage){
+    if (updateImage) {
       fileHelper.deleteFile(product.imageUrl);
       product.imageUrl = updateImage.path;
     }
@@ -163,15 +166,15 @@ exports.postEditProduct = (req, res, next) => {
   }).catch(err => {
     const error = new Error(err);
     error.httpStatusCode = 500;
-    next(error); 
+    next(error);
   });
 }
 
 exports.postDeleteProduct = (req, res, next) => {
   const id = req.body.productId;
   console.log('idd', id);
-  Product.findById(id).then(product=>{
-    if(!product){
+  Product.findById(id).then(product => {
+    if (!product) {
       return next(new Error('Product not found'));
     }
     fileHelper.deleteFile(product.imageUrl);
@@ -180,22 +183,36 @@ exports.postDeleteProduct = (req, res, next) => {
     }).catch(err => {
       const error = new Error(err);
       error.httpStatusCode = 500;
-      next(error); 
+      next(error);
     });;
   })
-  
+
 
 }
 
 exports.getProducts = (req, res, next) => {
+  const page = +req.query.page || 1;
   console.log('loading....')
-  Product.find({ userId: req.user._id }).populate('userId').then(products => {
-    console.log('admdddd', products);
-    res.render('admin/products', {
-      prods: products,
-      pageTitle: 'Admin Products',
-      path: '/admin/products',
-
-    });
-  });
+  Product.find({ userId: req.user._id }).countDocuments().then(numProucts => {
+    totalItems = numProucts;
+    console.log(numProucts)
+    return Product.find({ userId: req.user._id }).skip((page - 1) * ITEM_PER_PAGE).limit(ITEM_PER_PAGE);
+  })
+    .then(products => {
+      console.log(page);
+      console.log(totalItems);
+      console.log(Math.ceil(totalItems / ITEM_PER_PAGE))
+      res.render('admin/products', {
+        prods: products,
+        pageTitle: 'Admin Products',
+        path: '/admin/products',
+        totalProduct: totalItems,
+        hasNextPage: ITEM_PER_PAGE * page < totalItems,
+        currentPage: page,
+        hasPreviousPage: page > 1,
+        nextPage: page + 1,
+        previousPage: page - 1,
+        lastPage: Math.ceil(totalItems / ITEM_PER_PAGE),
+      });
+    })
 };

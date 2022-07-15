@@ -114,9 +114,9 @@ app.use('/500', error.get500)
 app.use('/', error.get404)
 
 
-app.use((error,req,res,next)=>{
+/*app.use((error,req,res,next)=>{
     res.status(500).render('500', { pageTitle: 'Error', path: '/500'});
-})
+})*/
 
 
 mongoose.connect(MONGODBURI).then(client => {

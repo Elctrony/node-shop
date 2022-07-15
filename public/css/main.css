@@ -270,6 +270,11 @@ form {
   color: white;
 }
 
+.pagination a:dashed {
+  background: #00695c;
+  color: white;
+}
+
 @media (min-width: 768px) {
   .main-header__nav {
     display: flex;
