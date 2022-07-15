@@ -6,3 +6,5 @@ const deleteFile = (filePath) => {
         throw err;
     });
 }
+
+module.exports = deleteFile;

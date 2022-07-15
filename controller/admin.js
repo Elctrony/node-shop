@@ -1,11 +1,12 @@
 const Product = require('../models/products');
 
 const mongoose = require('mongoose');
-const fileHelper = require('../util/file.js');
 
 const { validationResult } = require('express-validator');
 
-const ITEM_PER_PAGE = 1;
+const ITEM_PER_PAGE = 3;
+
+const fs = require('fs');
 
 
 exports.getAddProduct = (req, res, next) => {
@@ -152,10 +153,8 @@ exports.postEditProduct = (req, res, next) => {
       return res.redirect('/')
     }
     if (updateImage) {
-      fileHelper.deleteFile(product.imageUrl);
-      product.imageUrl = updateImage.path;
+          product.imageUrl = updateImage.path;
     }
-    deleteFile()
     product.title = updatedTitle;
     product.price = updatedPrice;
     product.description = updatedDescription;
@@ -170,20 +169,18 @@ exports.postEditProduct = (req, res, next) => {
   });
 }
 
-exports.postDeleteProduct = (req, res, next) => {
-  const id = req.body.productId;
+exports.deleteProduct = (req, res, next) => {
+  const id = req.params.productId;
   console.log('idd', id);
   Product.findById(id).then(product => {
     if (!product) {
       return next(new Error('Product not found'));
     }
-    fileHelper.deleteFile(product.imageUrl);
     Product.deleteOne({ _id: id, userId: req.user._id }).then(result => {
-      res.redirect('/');
+      res.status(200).json({message:'Success!'})
     }).catch(err => {
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      next(error);
+      res.status(500).json({message:'Deleting product Failed!'})
+
     });;
   })
 
